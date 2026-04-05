@@ -1,0 +1,30 @@
+[project]
+name = "quantum-pipeline"
+version = "0.1.0"
+description = "NumPy-only quantum-enhanced object detection pipeline"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+
+[tool.setuptools.packages.find]
+include = ["qsim*", "quantum*", "classical*", "pipeline*", "data*"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+viz = ["matplotlib>=3.7", "pillow>=9.0"]
+ibm = ["qiskit>=1.0", "qiskit-ibm-runtime>=0.20"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=qsim --cov=quantum --cov=classical --cov=pipeline --cov=data --cov-branch -v"
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.",
+    "raise NotImplementedError",
+]

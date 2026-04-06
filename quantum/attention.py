@@ -268,13 +268,13 @@ class QuantumSelfAttention:
             dp = grad_attn[i]
             grad_scores[i] = p * (dp - np.sum(dp * p))
 
-        self.grad_W_v = grad_values.T @ self._input
+        self.grad_W_v[:] = grad_values.T @ self._input
 
         grad_queries = np.zeros_like(self._queries)
         grad_keys = np.zeros_like(self._keys)
         self._grad_array[:] = 0.0
         if self.encoding_mode == "projection":
-            self.grad_W_compress = np.zeros_like(self.W_compress)
+            self.grad_W_compress[:] = 0.0
 
         for i in range(seq_len):
             for j in range(seq_len):
@@ -307,8 +307,8 @@ class QuantumSelfAttention:
                     grad_queries[i, :effective] += grad_enc_full[:effective] * self._keys[j, :effective]
                     grad_keys[j, :effective] += grad_enc_full[:effective] * self._queries[i, :effective]
 
-        self.grad_W_q = grad_queries.T @ self._input
-        self.grad_W_k = grad_keys.T @ self._input
+        self.grad_W_q[:] = grad_queries.T @ self._input
+        self.grad_W_k[:] = grad_keys.T @ self._input
 
         grad_input = (
             grad_values @ self.W_v

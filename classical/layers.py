@@ -71,15 +71,15 @@ class Linear(Layer):
     def backward(self, grad_output: np.ndarray) -> np.ndarray:
         x = self._input
         if x.ndim == 1:
-            self.grad_weight = np.outer(grad_output, x)
+            self.grad_weight[:] = np.outer(grad_output, x)
         else:
-            self.grad_weight = grad_output.T @ x
+            self.grad_weight[:] = grad_output.T @ x
 
         if self._use_bias:
             if grad_output.ndim == 1:
-                self.grad_bias = grad_output.copy()
+                self.grad_bias[:] = grad_output
             else:
-                self.grad_bias = grad_output.sum(axis=0)
+                self.grad_bias[:] = grad_output.sum(axis=0)
 
         grad_input = grad_output @ self.weight
         return grad_input
@@ -316,12 +316,12 @@ class Conv2d(Layer):
         if self._was_unbatched:
             grad_output = grad_output[np.newaxis]
 
-        N, F, H_out, W_out = grad_output.shape
+        N, F, _, _ = grad_output.shape
         grad_out_reshaped = grad_output.reshape(N, F, -1)
 
         W_col = self.weight.reshape(self.out_channels, -1)
 
-        self.grad_weight = np.zeros_like(self.weight)
+        self.grad_weight[:] = 0.0
         grad_col = np.zeros_like(self._col)
 
         for n in range(N):
@@ -331,7 +331,7 @@ class Conv2d(Layer):
             grad_col[n] = W_col.T @ grad_out_reshaped[n]
 
         if self._use_bias:
-            self.grad_bias = grad_output.sum(axis=(0, 2, 3))
+            self.grad_bias[:] = grad_output.sum(axis=(0, 2, 3))
 
         grad_input = self._col2im(grad_col, self._input.shape)
 
@@ -414,10 +414,10 @@ class BatchNorm1d(Layer):
         else:
             N = grad_output.shape[0]
 
-        self.grad_gamma = (grad_output * x_hat).sum(axis=0) if grad_output.ndim > 1 \
+        self.grad_gamma[:] = (grad_output * x_hat).sum(axis=0) if grad_output.ndim > 1 \
             else grad_output * x_hat
-        self.grad_beta = grad_output.sum(axis=0) if grad_output.ndim > 1 \
-            else grad_output.copy()
+        self.grad_beta[:] = grad_output.sum(axis=0) if grad_output.ndim > 1 \
+            else grad_output
 
         dx_hat = grad_output * self.gamma
         grad_input = (1.0 / N) * std_inv * (
